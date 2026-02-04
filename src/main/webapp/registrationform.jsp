@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Registration Form</title>
-<link href="reg.css" rel="stylesheet"/>
+<link href="css/reg.css" rel="stylesheet"/>
    <link rel="icon" href="images/logo.png" type="image/icon type">
 <style>
 

@@ -1,4 +1,6 @@
 package com.db.login;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -8,7 +10,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.mongodb.MongoClient;
+
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
@@ -40,7 +42,10 @@ public class GetSecurityQuestionsServlet extends HttpServlet {
 		MongoClient mongoClient = null;
 
 		try {
-			mongoClient = new MongoClient("localhost", 27017);
+			mongoClient = MongoClients.create(
+				    "mongodb+srv://khit_user:Khit%40123@khit.cgvx7lk.mongodb.net/college"
+				);
+
 			MongoDatabase database = mongoClient.getDatabase("college");
 			MongoCollection<Document> collection = database.getCollection("students");
 

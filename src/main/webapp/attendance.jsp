@@ -231,9 +231,9 @@
             <label for="section" class="date-picker-label">Section:</label>
             <select id="section" name="section" class="date-picker-input">
                 <option value="">Select Section</option>
-                <option value="A" <%= "A".equals(request.getAttribute("section")) ? "selected" : "" %>>A</option>
-                <option value="B" <%= "B".equals(request.getAttribute("section")) ? "selected" : "" %>>B</option>
-                <option value="C" <%= "C".equals(request.getAttribute("section")) ? "selected" : "" %>>C</option>
+                <option value="a" <%= "a".equals(request.getAttribute("section")) ? "selected" : "" %>>A</option>
+                <option value="b" <%= "b".equals(request.getAttribute("section")) ? "selected" : "" %>>B</option>
+                <option value="c" <%= "c".equals(request.getAttribute("section")) ? "selected" : "" %>>C</option> 
             </select>
 
             <label for="attendanceDate" class="date-picker-label">Select Date:</label>
@@ -266,7 +266,7 @@
                         String studentTable = "students_" + year + section;
                         String attendanceTable = "students_attendance_" + year + section;
 
-                        mongoClient = MongoClients.create("mongodb://localhost:27017");
+                        mongoClient = MongoClients.create("mongodb+srv://khit_user:Khit%40123@khit.cgvx7lk.mongodb.net/college");
                         MongoDatabase database = mongoClient.getDatabase("college");
                         MongoCollection<Document> studentsCol = database.getCollection(studentTable);
                         MongoCollection<Document> attendanceCol = database.getCollection(attendanceTable);
@@ -277,11 +277,12 @@
                             String name = student.getString("name");
 
                             Document attendance = attendanceCol.find(Filters.and(
-                                Filters.eq("REG_NO", regNo),
-                                Filters.eq("ATTENDANCE_DATE", attendanceDate)
+                            		Filters.eq("reg_no", regNo),
+                            		Filters.eq("attendance_date", attendanceDate)
+
                             )).first();
 
-                            String status = attendance != null ? attendance.getString("ATTENDANCE_STATUS") : "Not Marked";
+                            String status = attendance != null ? attendance.getString("attendance_status") : "Not Marked";
 
                             String presentClass = "button";
                             String absentClass = "button";
@@ -301,9 +302,34 @@
                     <td><%= regNo %></td>
                     <td><%= name %></td>
                     <td>
-                        <button type="submit" name="action" value="Present" class="<%= presentClass %>" formaction="AttendanceServlet?regNo=<%= regNo %>&student_name=<%= name %>">Mark Present</button>
-                        <button type="submit" name="action" value="Absent" class="<%= absentClass %>" formaction="AttendanceServlet?regNo=<%= regNo %>&student_name=<%= name %>">Mark Absent</button>
-                        <button type="submit" name="action" value="Reset" class="<%= resetClass %>" formaction="AttendanceServlet?regNo=<%= regNo %>&student_name=<%= name %>">Reset</button>
+                       <button type="submit"
+        name="action"
+        value="Present"
+        formaction="AttendanceServlet?regNo=<%= regNo %>"
+        <%= ("Present".equals(status) || "Absent".equals(status)) ? "disabled" : "" %>>
+    Mark Present
+</button>
+
+                        <button type="submit"
+        name="action"
+        value="Absent"
+        formaction="AttendanceServlet?regNo=<%= regNo %>"
+        <%= ("Present".equals(status) || "Absent".equals(status)) ? "disabled" : "" %>>
+    Mark Absent
+</button>
+
+                        <button type="submit"
+        formaction="resetAttendance"
+        formmethod="post"
+        class="<%= resetClass %>">
+    Reset
+</button>
+
+<input type="hidden" name="regNo" value="<%= regNo %>">
+<input type="hidden" name="year" value="<%= year %>">
+<input type="hidden" name="section" value="<%= section %>">
+<input type="hidden" name="attendanceDate" value="<%= attendanceDate %>">
+
                     </td>
                 </tr>
                 <% 

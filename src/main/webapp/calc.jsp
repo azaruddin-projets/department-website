@@ -180,99 +180,76 @@
 <body>
 <h1>Attendance Percentage Calculation</h1>
 
-<form action="calc.jsp" method="post">
-    <div class="date-picker-container">
-        <label for="startDate" class="date-picker-label">Start Date:</label>
-        <input type="date" id="startDate" name="startDate" class="date-picker-input" required>
-        <label for="endDate" class="date-picker-label">End Date:</label>
-        <input type="date" id="endDate" name="endDate" class="date-picker-input" required>
+<!-- FORM -->
+<form action="AttendancePercentageServlet" method="post">
+    <div class="form-box">
+        <label>Start Date:</label>
+        <input type="date" name="startDate" required>
 
-        <label for="year" class="date-picker-label">Year:</label>
-        <select id="year" name="year" class="dropdown" required>
-            <option value="">Select Year</option>
-            <option value="2">2nd Year</option>
-            <option value="3">3rd Year</option>
-            <option value="4">4th Year</option>
+        <label>End Date:</label>
+        <input type="date" name="endDate" required>
+
+        <label>Year:</label>
+        <select name="year" required>
+            <option value="">Select</option>
+            <option value="2">2nd</option>
+            <option value="3">3rd</option>
+            <option value="4">4th</option>
         </select>
 
-        <label for="section" class="date-picker-label">Section:</label>
-        <select id="section" name="section" class="dropdown" required>
-            <option value="">Select Section</option>
+        <label>Section:</label>
+        <select name="section" required>
+            <option value="">Select</option>
             <option value="a">A</option>
             <option value="b">B</option>
             <option value="c">C</option>
         </select>
 
-        <button type="submit" name="filter" value="filter" class="filter-button">Filter</button>
+        <button type="submit">Calculate</button>
     </div>
 </form>
 
+<!-- RESULT TABLE -->
 <table>
-    <thead>
-        <tr>
-            <th>Registration Number</th>
-            <th>Name</th>
-            <th>Total Days</th>
-            <th>Present Days</th>
-            <th>Absent Days</th>
-            <th>Percentage</th>
-        </tr>
-    </thead>
-    <tbody>
+    <tr>
+        <th>Reg No</th>
+        <th>Name</th>
+        <th>Total Days</th>
+        <th>Present</th>
+        <th>Absent</th>
+        <th>Percentage</th>
+    </tr>
+
 <%
-    String startDateStr = request.getParameter("startDate");
-    String endDateStr = request.getParameter("endDate");
-    String year = request.getParameter("year");
-    String section = request.getParameter("section");
+    List<Document> results =
+        (List<Document>) request.getAttribute("attendanceResults");
 
-    if (startDateStr != null && endDateStr != null && year != null && section != null) {
-        try (MongoClient mongoClient = MongoClients.create("mongodb://localhost:27017")) {
-            MongoDatabase database = mongoClient.getDatabase("college");
-            String studentCol = "students_" + year + section;
-            String attendanceCol = "students_attendance_" + year + section;
-
-            MongoCollection<Document> studentCollection = database.getCollection(studentCol);
-            MongoCollection<Document> attendanceCollection = database.getCollection(attendanceCol);
-
-            List<Document> students = studentCollection.find().into(new ArrayList<Document>());
-            for (Document student : students) {
-                String regNo = student.getString("reg_no");
-                String name = student.getString("name");
-
-                // Create filter with string comparison
-                Bson dateFilter = Filters.and(
-                    Filters.eq("reg_no", regNo),
-                    Filters.gte("attendance_date", startDateStr),
-                    Filters.lte("attendance_date", endDateStr)
-                );
-
-                List<Document> attendanceRecords = attendanceCollection.find(dateFilter).into(new ArrayList<Document>());
-                int totalDays = attendanceRecords.size();
-                int presentDays = 0;
-                for (Document record : attendanceRecords) {
-                    if ("Present".equalsIgnoreCase(record.getString("attendance_status"))) {
-                        presentDays++;
-                    }
-                }
-                int absentDays = totalDays - presentDays;
-                double percentage = totalDays > 0 ? (presentDays * 100.0 / totalDays) : 0.0;
+    if (results != null && !results.isEmpty()) {
+        for (Document d : results) {
+            int total = d.getInteger("total_days", 0);
+            int present = d.getInteger("present_days", 0);
+            int absent = total - present;
+            int percent = (total == 0) ? 0 : (present * 100 / total);
 %>
-        <tr>
-            <td><%= regNo %></td>
-            <td><%= name %></td>
-            <td><%= totalDays %></td>
-            <td><%= presentDays %></td>
-            <td><%= absentDays %></td>
-            <td class="percentage"><%= String.format("%.2f", percentage) %>%</td>
-        </tr>
+    <tr>
+        <td><%= d.getString("REG_NO") %></td>
+        <td><%= d.getString("NAME") %></td>
+        <td><%= total %></td>
+        <td><%= present %></td>
+        <td><%= absent %></td>
+        <td><%= percent %>%</td>
+    </tr>
 <%
-            }
-        } catch (Exception e) {
-            out.println("<tr><td colspan='6' style='color:red;'>Error: " + e.getMessage() + "</td></tr>");
         }
-    } else {
-        out.println("<tr><td colspan='6'>No data available. Please select date range and year/section.</td></tr>");
     }
 %>
+</table>
 
+<br>
+<center>
+    <a href="adminhome.jsp" class="back-button">Back to Dashboard</a>
+</center>
+
+</body>
+</html>
 

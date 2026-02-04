@@ -16,7 +16,7 @@ import java.io.IOException;
 @WebServlet(urlPatterns={"/RegisterServlet"})
 public class RegisterServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private static final String MONGO_URI = "mongodb://localhost:27017";
+    private static final String MONGO_URI = "mongodb+srv://khit_user:Khit%40123@khit.cgvx7lk.mongodb.net/college";
     private static final String DATABASE_NAME = "college"; 
     private static final String COLLECTION_NAME = "students"; 
 

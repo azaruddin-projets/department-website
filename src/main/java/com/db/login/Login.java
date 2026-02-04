@@ -1,6 +1,7 @@
 package com.db.login;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 
-import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
@@ -54,8 +55,11 @@ public class Login extends HttpServlet {
 		} else {
 			MongoClient mongoClient = null;
 			try {
-				mongoClient = new MongoClient("localhost", 27017);
-				MongoDatabase database = mongoClient.getDatabase("college");
+			    mongoClient = MongoClients.create(
+			        "mongodb+srv://khit_user:Khit%40123@khit.cgvx7lk.mongodb.net/college"
+			    );
+
+			    MongoDatabase database = mongoClient.getDatabase("college");
 				MongoCollection<Document> collection = database.getCollection("students");
 
 				Document query = new Document("username", id);

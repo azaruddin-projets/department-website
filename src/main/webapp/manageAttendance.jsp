@@ -1,5 +1,5 @@
 <%@ page import="com.mongodb.client.MongoClient" %>
-<%@ page import="com.mongodb.client.MongoClients" %>  <!-- Correct Import for MongoClient -->
+<%@ page import="com.mongodb.client.MongoClients" %>
 <%@ page import="com.mongodb.client.MongoDatabase" %>
 <%@ page import="com.mongodb.client.MongoCollection" %>
 <%@ page import="org.bson.Document" %>
@@ -9,104 +9,146 @@
 <%@ page import="java.util.*, java.text.SimpleDateFormat" %>
 <%@ page import="java.text.ParseException" %>
 
+<!DOCTYPE html>
 <html>
 <head>
     <link rel="icon" href="images/logo.png" type="image/icon type">
     <title>Manage Attendance</title>
 </head>
 <body>
-    <h1>Manage Attendance</h1>
-    <form method="post" action="manageAttendance.jsp">
-        <label for="commencementDate">Commencement Date:</label>
-        <input type="date" id="commencementDate" name="commencementDate" required>
-        <input type="submit" value="Calculate Attendance">
-    </form>
+
+<h1>Manage Attendance</h1>
+
+<!-- ✅ FORM (FIXED: year & section added) -->
+<form method="post" action="manageAttendance.jsp">
+    <label>Year:</label>
+    <select name="year" required>
+        <option value="">Select</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+    </select>
+
+    <label>Section:</label>
+    <select name="section" required>
+        <option value="">Select</option>
+        <option value="a">A</option>
+        <option value="b">B</option>
+        <option value="c">C</option>
+    </select>
+
+    <br><br>
+
+    <label for="commencementDate">Commencement Date:</label>
+    <input type="date" id="commencementDate" name="commencementDate" required>
+
+    <input type="submit" value="Calculate Attendance">
+</form>
 
 <%
-    if (request.getMethod().equalsIgnoreCase("post")) {
-        String commencementDateStr = request.getParameter("commencementDate");
-        MongoClient mongoClient = null;
-        String year = request.getParameter("year");
-        String section = request.getParameter("section");
+if ("POST".equalsIgnoreCase(request.getMethod())) {
 
-        try {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-            Date commencementDate = sdf.parse(commencementDateStr);
-            Date today = new Date();
-            mongoClient = MongoClients.create("mongodb://localhost:27017");
-            MongoDatabase database = mongoClient.getDatabase("college");
-            String suffix = year + section;
-            MongoCollection<Document> attendanceCollection = database.getCollection("students_attendance_" + suffix);
-            MongoCollection<Document> studentCollection = database.getCollection("students"+suffix);
-            FindIterable<Document> students = studentCollection.find();
+    String commencementDateStr = request.getParameter("commencementDate");
+    String year = request.getParameter("year");
+    String section = request.getParameter("section");
 
+    MongoClient mongoClient = null;
 
-            out.println("<h2>Attendance Summary</h2>");
-            out.println("<table border='1'>");
-            out.println("<tr><th>Reg No</th><th>Name</th><th>Present Days</th><th>Absent Days</th><th>Total Days</th><th>Attendance Percentage</th></tr>");
+    try {
+        section = section.toLowerCase();   
+        String suffix = year + section;
 
-            boolean foundRecords = false;
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        Date commencementDate = sdf.parse(commencementDateStr);
+        Date today = new Date();
+        mongoClient = MongoClients.create(
+            "mongodb+srv://khit_user:Khit%40123@khit.cgvx7lk.mongodb.net/college"
+        );
 
-            for (Document student : students) {
-                String regNo = student.getString("reg_no");
-                String name = student.getString("name");
+        MongoDatabase database = mongoClient.getDatabase("college");
+        MongoCollection<Document> attendanceCollection =
+            database.getCollection("students_attendance_" + suffix);
 
-                Bson attendanceFilter = Filters.and(
-                    Filters.eq("reg_no", regNo),
-                    Filters.gte("attendance_date", commencementDate),
-                    Filters.lte("attendance_date", today)
-                );
+        MongoCollection<Document> studentCollection =
+            database.getCollection("students_" + suffix);
 
-                FindIterable<Document> attendanceRecords = attendanceCollection.find(attendanceFilter);
+        FindIterable<Document> students = studentCollection.find();
 
-                int presentDays = 0;
-                int absentDays = 0;
-                int totalDays = 0;
+        out.println("<h2>Attendance Summary</h2>");
+        out.println("<table border='1'>");
+        out.println("<tr>");
+        out.println("<th>Reg No</th>");
+        out.println("<th>Name</th>");
+        out.println("<th>Present Days</th>");
+        out.println("<th>Absent Days</th>");
+        out.println("<th>Total Days</th>");
+        out.println("<th>Attendance %</th>");
+        out.println("</tr>");
 
-                for (Document record : attendanceRecords) {
-                    String status = record.getString("attendance_status");
-                    if ("Present".equalsIgnoreCase(status)) {
-                        presentDays++;
-                    } else if ("Absent".equalsIgnoreCase(status)) {
-                        absentDays++;
-                    }
-                    totalDays++;
+        boolean foundRecords = false;
+
+        for (Document student : students) {
+            String regNo = student.getString("reg_no");
+            String name = student.getString("name");
+
+            Bson filter = Filters.and(
+                Filters.eq("reg_no", regNo),
+                Filters.gte("attendance_date", commencementDate),
+                Filters.lte("attendance_date", today)
+            );
+
+            FindIterable<Document> records = attendanceCollection.find(filter);
+
+            int present = 0;
+            int absent = 0;
+            int total = 0;
+
+            for (Document record : records) {
+                String status = record.getString("attendance_status");
+                if ("Present".equalsIgnoreCase(status)) {
+                    present++;
+                } else if ("Absent".equalsIgnoreCase(status)) {
+                    absent++;
                 }
-
-                if (totalDays > 0) {
-                    foundRecords = true;
-                    double percentage = ((double) presentDays / totalDays) * 100.0;
-
-                    out.println("<tr>");
-                    out.println("<td>" + regNo + "</td>");
-                    out.println("<td>" + name + "</td>");
-                    out.println("<td>" + presentDays + "</td>");
-                    out.println("<td>" + absentDays + "</td>");
-                    out.println("<td>" + totalDays + "</td>");
-                    out.println("<td>" + String.format("%.2f", percentage) + "%</td>");
-                    out.println("</tr>");
-                }
+                total++;
             }
 
-            out.println("</table>");
+            if (total > 0) {
+                foundRecords = true;
+                double percentage = (present * 100.0) / total;
 
-            if (!foundRecords) {
-                out.println("<p>No attendance records found for the specified commencement date.</p>");
-            }
-
-        } catch (ParseException pe) {
-            out.println("<p>Error parsing date. Please try again.</p>");
-        } catch (Exception e) {
-            e.printStackTrace();
-            out.println("<p>An error occurred: " + e.getMessage() + "</p>");
-        } finally {
-            if (mongoClient != null) {
-                mongoClient.close();
+                out.println("<tr>");
+                out.println("<td>" + regNo + "</td>");
+                out.println("<td>" + name + "</td>");
+                out.println("<td>" + present + "</td>");
+                out.println("<td>" + absent + "</td>");
+                out.println("<td>" + total + "</td>");
+                out.println("<td>" + String.format("%.2f", percentage) + "%</td>");
+                out.println("</tr>");
             }
         }
+
+        out.println("</table>");
+
+        if (!foundRecords) {
+            out.println("<p>No attendance records found.</p>");
+        }
+
+    } catch (ParseException e) {
+        out.println("<p>Invalid date format.</p>");
+    } catch (Exception e) {
+        e.printStackTrace();
+        out.println("<p>Error: " + e.getMessage() + "</p>");
+    } finally {
+        if (mongoClient != null) {
+            mongoClient.close();
+        }
     }
+}
 %>
 
-    <br><a href="adminhome">Home</a>
+<br>
+<a href="adminhome.jsp">Back to Admin Dashboard</a>
+
 </body>
 </html>

@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=ISO-8859-1" pageEncoding="ISO-8859-1"%>
 <%@ page import="com.mongodb.client.*, org.bson.Document" %>
-<%@ page import="com.mongodb.MongoClient, com.mongodb.MongoClientURI" %>
+<%@ page import="com.mongodb.client.MongoClient" %>
+<%@ page import="com.mongodb.client.MongoClients" %>
 <%@ page import="org.bson.types.ObjectId" %>
 <!DOCTYPE html>
 <html lang="en">
@@ -231,7 +232,10 @@
                 <% 
                     MongoClient mongoClient = null;
                     try {
-                        mongoClient = new MongoClient(new MongoClientURI("mongodb://localhost:27017"));
+                    	mongoClient = MongoClients.create(
+                    		    "mongodb+srv://khit_user:Khit%40123@khit.cgvx7lk.mongodb.net/college"
+                    		);
+
                         MongoDatabase database = mongoClient.getDatabase("college"); 
                         MongoCollection<Document> collection = database.getCollection("announcements");
 
@@ -246,12 +250,15 @@
                     <td><%= title %></td>
                     <td><%= message %></td>
                     <td>
-                        <form action="AnnouncementServlet" method="post" style="display:inline;padding:0px;">
-                            <input type="hidden" name="action" value="delete">
-                            <input type="hidden" name="id" value="<%= id.toHexString() %>">
-                            <button type="submit" class="delete-button">Delete</button>
-                        </form>
-                    </td>
+                        <td>
+    <form action="AnnouncementServlet" method="post" style="display:inline;">
+        <input type="hidden" name="action" value="delete">
+        <input type="hidden" name="id" value="<%= id.toHexString() %>">
+        <button type="submit" class="delete-button">Delete</button>
+    </form>
+</td>
+
+ 
                 </tr>
                 <% 
                         }

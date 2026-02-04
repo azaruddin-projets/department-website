@@ -16,7 +16,7 @@ import java.io.PrintWriter;
 public class VerifySecurityAnswersServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
-    private static final String CONNECTION_STRING = "mongodb://localhost:27017";
+    private static final String CONNECTION_STRING = "mongodb+srv://khit_user:Khit%40123@khit.cgvx7lk.mongodb.net/college";
     private static final String DATABASE_NAME = "college";  // Replace with your DB name
     private static final String COLLECTION_NAME = "students";
 
@@ -51,7 +51,10 @@ public class VerifySecurityAnswersServlet extends HttpServlet {
             if (userDoc != null) {
                 String correctAnswer1 = userDoc.getString("security_answer1");
                 String correctAnswer2 = userDoc.getString("security_answer2");
-                valid = answer1.equals(correctAnswer1) && answer2.equals(correctAnswer2);
+                valid = correctAnswer1 != null && correctAnswer2 != null
+                        && correctAnswer1.equals(answer1)
+                        && correctAnswer2.equals(answer2);
+
             }
         } catch (Exception e) {
             e.printStackTrace();

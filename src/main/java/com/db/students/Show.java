@@ -1,6 +1,8 @@
 package com.db.students;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
@@ -54,8 +56,10 @@ public class Show extends HttpServlet {
 		pw.print("<input type='submit' value='Search'></form>");
 
 		pw.print("<table><tr><th>Reg No</th><th>Name</th><th>Branch</th></tr>");
+		try (MongoClient mongoClient = MongoClients.create(
+		        "mongodb+srv://khit_user:Khit%40123@khit.cgvx7lk.mongodb.net/college")) {
 
-		try (MongoClient mongoClient = new MongoClient("localhost", 27017)) {
+
 			MongoDatabase db = mongoClient.getDatabase(DB_NAME);
 			Pattern searchPattern = null;
 

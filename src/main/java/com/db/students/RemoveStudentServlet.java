@@ -1,90 +1,80 @@
 package com.db.students;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.*;
+import java.io.IOException;
 
-@WebServlet({"/removeStudent"})
+import org.bson.Document;
+
+import static com.mongodb.client.model.Filters.eq;
+
+@WebServlet("/removeStudent")
 public class RemoveStudentServlet extends HttpServlet {
-	private static final String DB_URL = "jdbc:oracle:thin:@localhost:1521:orcl";
-	private static final String DB_USER = "system";
-	private static final String DB_PASSWORD = "Manvith7226";
 
-	protected void doPost(HttpServletRequest request, HttpServletResponse response)
-			throws IOException, ServletException {
-		response.setContentType("text/html");
-		PrintWriter pw = response.getWriter();
-		String regNo = request.getParameter("regNoRemove");
-		String year = request.getParameter("year");
-		String section = request.getParameter("section");
-		Connection con = null;
-		PreparedStatement pst1 = null;
-		PreparedStatement pst2 = null;
-		String message = "";
+    private static final String MONGO_URI =
+            "mongodb+srv://khit_user:Khit%40123@khit.cgvx7lk.mongodb.net/college";
+    private static final String DB_NAME = "college";
 
-		try {
-			Class.forName("oracle.jdbc.driver.OracleDriver");
-			con = DriverManager.getConnection("jdbc:oracle:thin:@localhost:1521:orcl", "system", "Manvith7226");
-			con.setAutoCommit(false);
-			String studentsTableName = "students_" + year + section.toLowerCase();
-			String attendanceTableName = "students_attendance_" + year + section.toLowerCase();
-			String query1 = "DELETE FROM " + attendanceTableName + " WHERE reg_no = ?";
-			String query2 = "DELETE FROM " + studentsTableName + " WHERE reg_no = ?";
-			pst1 = con.prepareStatement(query1);
-			pst1.setString(1, regNo);
-			int rowsDeletedFromAttendance = pst1.executeUpdate();
-			pst2 = con.prepareStatement(query2);
-			pst2.setString(1, regNo);
-			int rowsDeletedFromStudents = pst2.executeUpdate();
-			if (rowsDeletedFromAttendance > 0 && rowsDeletedFromStudents > 0) {
-				con.commit();
-				message = "Student removed successfully!";
-			} else {
-				con.rollback();
-				message = "Failed to remove student.";
-			}
-		} catch (SQLException | ClassNotFoundException var27) {
-			var27.printStackTrace();
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException {
 
-			try {
-				if (con != null) {
-					con.rollback();
-				}
-			} catch (SQLException var26) {
-				var26.printStackTrace();
-			}
+        String regNo = request.getParameter("regNoRemove");
+        String year = request.getParameter("year");
+        String section = request.getParameter("section");
 
-			message = "An error occurred: " + var27.getMessage();
-		} finally {
-			try {
-				if (pst1 != null) {
-					pst1.close();
-				}
+        String message;
 
-				if (pst2 != null) {
-					pst2.close();
-				}
+        if (regNo == null || year == null || section == null ||
+            regNo.isEmpty() || year.isEmpty() || section.isEmpty()) {
 
-				if (con != null) {
-					con.close();
-				}
-			} catch (SQLException var25) {
-				var25.printStackTrace();
-			}
+            message = "All fields are required!";
+            request.setAttribute("message", message);
+            request.getRequestDispatcher("manageStudents.jsp").forward(request, response);
+            return;
+        }
 
-		}
+        section = section.toLowerCase();
 
-		request.setAttribute("message", message);
-		RequestDispatcher dispatcher = request.getRequestDispatcher("manageStudents.jsp");
-		dispatcher.forward(request, response);
-	}
+        String studentsCollectionName = "students_" + year + section;
+        String attendanceCollectionName = "students_attendance_" + year + section;
+
+        try (MongoClient mongoClient = MongoClients.create(MONGO_URI)) {
+
+            MongoDatabase database = mongoClient.getDatabase(DB_NAME);
+
+            MongoCollection<Document> studentsCollection =
+                    database.getCollection(studentsCollectionName);
+
+            MongoCollection<Document> attendanceCollection =
+                    database.getCollection(attendanceCollectionName);
+
+            long studentDeleted =
+                    studentsCollection.deleteOne(eq("reg_no", regNo)).getDeletedCount();
+
+            long attendanceDeleted =
+                    attendanceCollection.deleteMany(eq("reg_no", regNo)).getDeletedCount();
+
+            if (studentDeleted > 0) {
+                message = "Student removed successfully!";
+            } else {
+                message = "Student not found!";
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            message = "Error removing student: " + e.getMessage();
+        }
+
+        request.setAttribute("message", message);
+        RequestDispatcher dispatcher =
+                request.getRequestDispatcher("manageStudents.jsp");
+        dispatcher.forward(request, response);
+    }
 }

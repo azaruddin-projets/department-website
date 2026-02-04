@@ -1,18 +1,22 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ page import="java.sql.*" %>
-<%@ page import="java.text.SimpleDateFormat" %>
-<%@ page import="java.util.Date" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page import="java.util.*, java.text.SimpleDateFormat" %>
+<%@ page import="org.bson.Document" %>
+<%@ page import="com.mongodb.client.MongoClient" %>
+<%@ page import="com.mongodb.client.MongoClients" %>
+<%@ page import="com.mongodb.client.MongoDatabase" %>
+<%@ page import="com.mongodb.client.MongoCollection" %>
+<%@ page import="com.mongodb.client.FindIterable" %>
+
 
 <html lang="en">
 <head>
-<script src="scripts.js"></script>
+<script src="js/scripts.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KHIT AIML DEPT</title>
     <link rel="icon" href="images/logo.png" type="image/icon type">
-    <link rel="stylesheet" href="khit.css">
+    <link rel="stylesheet" href="css/khit.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
     <style>
 .announcement {
   border: 1px solid #2f2f2f; 
@@ -619,7 +623,7 @@ button:hover {
             <div class="input-box">
                 <input type="text" name="MYUSER" required="" autocomplete="off">
 
-                <label>REDG.NO</label>
+                <label>REG.NO</label>
                 <span class="icon"></span>
             </div>
             <div class="input-box">
@@ -650,52 +654,55 @@ button:hover {
     padding-bottom: 30px;
     padding-top: 20px;">Events & Announcements</h2>
             <div id="announcement-list">
-<%@ page import="com.mongodb.client.*, org.bson.Document" %>
-<%@ page import="com.mongodb.MongoClient, com.mongodb.MongoClientURI" %>
-<%@ page import="java.text.SimpleDateFormat, java.util.Date" %>
+<%@ page import="com.mongodb.client.*" %>
+<%@ page import="org.bson.Document" %>
+<%@ page import="com.mongodb.MongoClientSettings" %>
+<%@ page import="com.mongodb.client.MongoClients" %>
 
 <%
-    MongoClient mongoClient = null;
-    try {
-        // Connect to MongoDB
-        mongoClient = new MongoClient(new MongoClientURI("mongodb://localhost:27017"));
-        MongoDatabase database = mongoClient.getDatabase("college"); // Replace with your DB name
-        MongoCollection<Document> collection = database.getCollection("announcements");
+MongoClient mongoClient = null;
+try {
+    String mongoUri = "mongodb+srv://khit_user:Khit%40123@khit.cgvx7lk.mongodb.net/college";
 
-        // Find documents sorted by post_date descending
-        FindIterable<Document> announcements = collection.find().sort(new Document("post_date", -1));
+    mongoClient = MongoClients.create(mongoUri);
+    MongoDatabase database = mongoClient.getDatabase("college");
+    MongoCollection<Document> collection =
+            database.getCollection("announcements");
 
-        for (Document doc : announcements) {
-            String title = doc.getString("title");
-            String message = doc.getString("message");
-            Date postDate = doc.getDate("post_date");
-            SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
-%>
-            <div class="announcement">
-                <div class="date-container">
-                    <button class="date-button">
-                        <span><%= dateFormat.format(postDate) %></span>
-                    </button>
-                </div>
-                <div>
-                    <h3><%= title %></h3>
-                    <p><%= message %></p>
-                </div>
-            </div>
-<%
-        }
-    } catch (Exception e) {
+    FindIterable<Document> announcements =
+            collection.find().sort(new Document("post_date", -1));
+
+    SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
+
+    for (Document doc : announcements) {
+        String title = doc.getString("title");
+        String message = doc.getString("message");
+        Date postDate = doc.getDate("post_date");
 %>
         <div class="announcement">
-            <p>Error fetching announcements: <%= e.getMessage() %></p>
+            <div class="date-container">
+                <button class="date-button">
+                    <span><%= dateFormat.format(postDate) %></span>
+                </button>
+            </div>
+            <div>
+                <h3><%= title %></h3>
+                <p><%= message %></p>
+            </div>
         </div>
 <%
-    } finally {
-        if (mongoClient != null) {
-            mongoClient.close();
-        }
     }
+} catch (Exception e) {
 %>
+    <div class="announcement">
+        <p>Error fetching announcements: <%= e.getMessage() %></p>
+    </div>
+<%
+} finally {
+    if (mongoClient != null) mongoClient.close();
+}
+%>
+
 
                
             </div>

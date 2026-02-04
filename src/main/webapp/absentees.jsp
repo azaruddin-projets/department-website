@@ -1,7 +1,7 @@
 <%@ page import="com.mongodb.client.*" %>
 <%@ page import="org.bson.Document" %>
-<%@ page import="javax.servlet.http.*" %>
-<%@ page import="javax.servlet.*" %>
+<%@ page import="java.text.SimpleDateFormat" %>
+<%@ page import="java.util.Date" %>
 <%@ page import="java.util.*" %>
 <!DOCTYPE html>
 <html>
@@ -162,45 +162,66 @@
 </head>
 <body>
     <h2>Absentee Report</h2>
+<%
+    String action = request.getParameter("action");
+    String year = request.getParameter("year");
+    String section = request.getParameter("section");
+    String dateStr = request.getParameter("date");
 
-    <%
-        String action = request.getParameter("action");
-        String year = request.getParameter("year");
-        String section = request.getParameter("section");
-        String date = request.getParameter("date");
+    if ("Submit".equals(action) && year != null && section != null && dateStr != null && !dateStr.isEmpty()) {
 
-        if ("Submit".equals(action) && year != null && section != null && date != null && !date.isEmpty()) {
-            MongoClient mongoClient = null;
-            try {
-                mongoClient = MongoClients.create("mongodb://localhost:27017");
-                MongoDatabase database = mongoClient.getDatabase("college");
-                String suffix = year + section;
-                MongoCollection<Document> collection = database.getCollection("students_attendance_" + suffix);
+        MongoClient mongoClient = null;
 
-                Document query = new Document("attendance_date", date)
-                                 .append("attendance_status", "Absent");
+        try {
+            mongoClient = MongoClients.create(
+                "mongodb+srv://khit_user:Khit%40123@khit.cgvx7lk.mongodb.net/college"
+            );
 
-                FindIterable<Document> docs = collection.find(query);
+            MongoDatabase database = mongoClient.getDatabase("college");
 
-                out.println("<h3>Absentees on " + date + "</h3>");
-                out.println("<table>");
-                out.println("<tr><th>Roll Number</th><th>Status</th></tr>");
+            section = section.toLowerCase();  
+            String collectionName = "students_attendance_" + year + section;
 
-                for (Document doc : docs) {
-                    String regNo = doc.getString("reg_no"); // Fixed key
-                    String status = doc.getString("attendance_status");
-                    out.println("<tr><td>" + regNo + "</td><td>" + status + "</td></tr>");
-                }
+            MongoCollection<Document> collection =
+                    database.getCollection(collectionName);
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            Date startDate = sdf.parse(dateStr);
+            Date endDate = new Date(startDate.getTime() + 24*60*60*1000 - 1);
 
-                out.println("</table>");
-            } catch (Exception e) {
-                out.println("<p class='message'>Error: " + e.getMessage() + "</p>");
-                e.printStackTrace();
-            } finally {
-                if (mongoClient != null) mongoClient.close();
+            FindIterable<Document> docs = collection.find(
+                new Document("attendance_status", "Absent")
+                    .append("attendance_date",
+                        new Document("$gte", startDate).append("$lte", endDate)
+                    )
+            );
+
+            out.println("<h3>Absentees on " + dateStr + "</h3>");
+            out.println("<table>");
+            out.println("<tr><th>Register Number</th><th>Status</th></tr>");
+
+            boolean found = false;
+            for (Document doc : docs) {
+                found = true;
+                out.println("<tr>");
+                out.println("<td>" + doc.getString("reg_no") + "</td>");
+                out.println("<td>" + doc.getString("attendance_status") + "</td>");
+                out.println("</tr>");
             }
+
+            if (!found) {
+                out.println("<tr><td colspan='2'>No absentees found</td></tr>");
+            }
+
+            out.println("</table>");
+
+        } catch (Exception e) {
+            out.println("<p class='message'>Error: " + e.getMessage() + "</p>");
+        } finally {
+            if (mongoClient != null) mongoClient.close();
         }
-    %>
+    }
+%>
+
 
     <!-- Form section -->
     <form action="absentees.jsp" method="post">
@@ -221,7 +242,10 @@
         </select>
 
         <label for="date">Date:</label>
-        <input type="date" id="date" name="date" value="<%= date != null ? date : "" %>" required>
+        <input type="date" id="date" name="date"
+       value="<%= request.getParameter("date") != null ? request.getParameter("date") : "" %>"
+       required>
+
 
         <input type="submit" name="action" value="Submit">
     </form>

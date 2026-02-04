@@ -18,7 +18,7 @@ public class AttendancePercentageServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     // MongoDB connection string and DB name
-    private static final String CONNECTION_STRING = "mongodb://localhost:27017";
+    private static final String CONNECTION_STRING = "mongodb+srv://khit_user:Khit%40123@khit.cgvx7lk.mongodb.net/college";
     private static final String DATABASE_NAME = "college";
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -55,47 +55,56 @@ public class AttendancePercentageServlet extends HttpServlet {
 
                 // Aggregation pipeline
                 List<Document> pipeline = Arrays.asList(
-                    // Lookup attendance records per student
-                    new Document("$lookup", new Document()
-                        .append("from", attendanceCollectionName)
-                        .append("localField", "REG_NO")
-                        .append("foreignField", "REG_NO")
-                        .append("as", "attendance_records")
-                    ),
 
-                    // Filter attendance_records array by date range
-                    new Document("$addFields", new Document("attendance_records",
-                        new Document("$filter", new Document()
-                            .append("input", "$attendance_records")
-                            .append("as", "record")
-                            .append("cond", new Document("$and", Arrays.asList(
-                                new Document("$gte", Arrays.asList("$$record.attendance_date", startDate)),
-                                new Document("$lte", Arrays.asList("$$record.attendance_date", endDate))
-                            )))
-                        )
-                    )),
+                	    new Document("$lookup", new Document()
+                	        .append("from", attendanceCollectionName)
+                	        .append("localField", "reg_no")
+                	        .append("foreignField", "reg_no")
+                	        .append("as", "attendance_records")
+                	    ),
 
-                    // Add total_days field = size of filtered attendance_records
-                    new Document("$addFields", new Document("total_days", new Document("$size", "$attendance_records"))),
+                	    new Document("$addFields", new Document("attendance_records",
+                	        new Document("$filter", new Document()
+                	            .append("input", "$attendance_records")
+                	            .append("as", "record")
+                	            .append("cond", new Document("$and", Arrays.asList(
+                	                new Document("$gte", Arrays.asList("$$record.attendance_date", startDate)),
+                	                new Document("$lte", Arrays.asList("$$record.attendance_date", endDate))
+                	            )))
+                	        )
+                	    )),
 
-                    // Add present_days = size of attendance_records with attendance_status = "Present"
-                    new Document("$addFields", new Document("present_days",
-                        new Document("$size", new Document("$filter", new Document()
-                            .append("input", "$attendance_records")
-                            .append("as", "record")
-                            .append("cond", new Document("$eq", Arrays.asList("$$record.attendance_status", "Present")))
-                        ))
-                    )),
+                	    new Document("$addFields",
+                	        new Document("total_days",
+                	            new Document("$size", "$attendance_records")
+                	        )
+                	    ),
 
-                    // Project required fields
-                    new Document("$project", new Document()
-                        .append("_id", 0)
-                        .append("REG_NO", 1)
-                        .append("NAME", 1)
-                        .append("total_days", 1)
-                        .append("present_days", 1)
-                    )
-                );
+                	    new Document("$addFields",
+                	        new Document("present_days",
+                	            new Document("$size",
+                	                new Document("$filter", new Document()
+                	                    .append("input", "$attendance_records")
+                	                    .append("as", "record")
+                	                    .append("cond",
+                	                        new Document("$eq",
+                	                            Arrays.asList("$$record.attendance_status", "Present")
+                	                        )
+                	                    )
+                	                )
+                	            )
+                	        )
+                	    ),
+
+                	    new Document("$project", new Document()
+                	        .append("_id", 0)
+                	        .append("reg_no", 1)
+                	        .append("name", 1)
+                	        .append("total_days", 1)
+                	        .append("present_days", 1)
+                	    )
+                	);
+
 
                 // Execute aggregation and collect results
                 List<Document> results = new ArrayList<>();

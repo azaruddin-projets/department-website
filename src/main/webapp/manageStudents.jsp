@@ -217,66 +217,74 @@
 </head>
 <body>
     <h1>Manage Students</h1>
-    <div class="container">
-        <form action="viewstudents" method="get" style="height: 90px;">
-            <button type="submit">View All Students</button>
-        </form>
-        <form action="addStudent" method="post">
-            <h2>Add New Student</h2>
-            <label for="regNo">Reg No:</label>
-            <input type="text" id="regNo" name="regNo" required placeholder="Enter registration number">
-            <label for="studentName">Name:</label>
-            <input type="text" id="studentName" name="studentName" required placeholder="Enter student name">
-            <label for="year">Year:</label>
-            <select id="year" name="year" required>
-                <option value="" disabled selected>Select year</option>
-                
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-            </select>
-            <label for="section">Section:</label>
-            <select id="section" name="section" required>
-                <option value="" disabled selected>Select section</option>
-                <option value="A">A</option>
-                <option value="B">B</option>
-                <option value="C">C</option>
-                <!-- Add more sections if needed -->
-            </select>
-            <label for="branch">Branch:</label>
-            <input type="text" id="branch" name="branch" required placeholder="Enter student branch">
-            <button type="submit">Add Student</button>
-        </form>
-        <form action="removeStudent" method="post">
-            <h2>Remove Student</h2>
-            <label for="regNoRemove">Reg No:</label>
-            <input type="text" id="regNoRemove" name="regNoRemove" required placeholder="Enter registration number">
-            <label for="yearRemove">Year:</label>
-            <select id="yearRemove" name="year" required>
-                <option value="" disabled selected>Select year</option>
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-            </select>
-            <label for="sectionRemove">Section:</label>
-            <select id="sectionRemove" name="section" required>
-                <option value="" disabled selected>Select section</option>
-                <option value="A">A</option>
-                <option value="B">B</option>
-                <option value="C">C</option>
-                <!-- Add more sections if needed -->
-            </select>
-            <button type="submit">Remove Student</button>
-        </form>
-    </div>
+    <form action="viewstudents" method="get">
+    <button type="submit">View All Students</button>
+</form>
 
-    <a class="back-button" href="adminhome.jsp">Back to Admin Dashboard</a>
-    <!-- Display the message -->
-    <div class="message">
-        <p>
-            <%= request.getAttribute("message") != null ? request.getAttribute("message") : "No message available" %>
-        </p>
-    </div>
+<!-- ADD STUDENT -->
+<form action="addStudent" method="post">
+    <h2>Add Student</h2>
+
+    <label>Reg No</label>
+    <input type="text" name="regNo" required>
+
+    <label>Name</label>
+    <input type="text" name="studentName" required>
+
+    <label>Year</label>
+    <select name="year" required>
+        <option value="">Select</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+    </select>
+
+    <label>Section</label>
+    <select name="section" required>
+        <option value="">Select</option>
+        <option value="A">A</option>
+        <option value="B">B</option>
+        <option value="C">C</option>
+    </select>
+
+    <label>Branch</label>
+    <input type="text" name="branch" required>
+
+    <button type="submit">Add Student</button>
+</form>
+
+<!-- REMOVE STUDENT -->
+<form action="removeStudent" method="post">
+    <h2>Remove Student</h2>
+
+    <label>Reg No</label>
+    <input type="text" name="regNoRemove" required>
+
+    <label>Year</label>
+    <select name="year" required>
+        <option value="">Select</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+    </select>
+
+    <label>Section</label>
+    <select name="section" required>
+        <option value="">Select</option>
+        <option value="A">A</option>
+        <option value="B">B</option>
+        <option value="C">C</option>
+    </select>
+
+    <button type="submit">Remove Student</button>
+</form>
+
+<!-- MESSAGE -->
+<div class="message">
+    <%= request.getAttribute("message") != null ? request.getAttribute("message") : "" %>
+</div>
+
+<a class="back" href="adminhome.jsp">⬅ Back to Admin Dashboard</a>
+
 </body>
 </html>

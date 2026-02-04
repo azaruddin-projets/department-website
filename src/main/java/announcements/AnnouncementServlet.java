@@ -1,6 +1,7 @@
 package announcements; 
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientURI;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
@@ -16,9 +17,13 @@ public class AnnouncementServlet extends HttpServlet {
         MongoClient mongoClient = null;
 
         try {
-            		
-            mongoClient = new MongoClient(new MongoClientURI("mongodb://localhost:27017"));
-            MongoDatabase database = mongoClient.getDatabase("college"); 
+        	mongoClient = MongoClients.create(
+        		    "mongodb+srv://khit_user:Khit%40123@khit.cgvx7lk.mongodb.net/college"
+        		);
+
+
+        	MongoDatabase database = mongoClient.getDatabase("college");
+
             MongoCollection<Document> collection = database.getCollection("announcements");
 
             

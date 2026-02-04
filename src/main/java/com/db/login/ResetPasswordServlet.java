@@ -21,13 +21,14 @@ import java.util.Random;
 @WebServlet("/ResetPasswordServlet")
 public class ResetPasswordServlet extends HttpServlet {
 
-    private static final String MONGO_URI = "mongodb://localhost:27017";
+    private static final String MONGO_URI = "mongodb+srv://khit_user:Khit%40123@khit.cgvx7lk.mongodb.net/college";
     private static final String DB_NAME = "college";
     private static final String USER_COLLECTION = "students";
     private static final String OTP_COLLECTION = "otp";
 
-    private static final String EMAIL_USER = "Shaikazaruddin913@gmail.com";
-    private static final String EMAIL_PASSWORD = "gpsthofyxpyfqaql";
+    private static final String EMAIL_USER = System.getenv("EMAIL_USER");
+    private static final String EMAIL_PASSWORD = System.getenv("EMAIL_PASSWORD");
+
 
     private MongoClient mongoClient;
 

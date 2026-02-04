@@ -17,8 +17,8 @@ import java.io.PrintWriter;
 public class StudentServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 
-	private static final String CONNECTION_STRING = "mongodb://localhost:27017";
-	private static final String DATABASE_NAME = "college"; // Replace with your DB name
+	private static final String CONNECTION_STRING = "mongodb+srv://khit_user:Khit%40123@khit.cgvx7lk.mongodb.net/college";
+	private static final String DATABASE_NAME = "college"; 
 	private static final String COLLECTION_NAME = "students";
 
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -38,9 +38,16 @@ public class StudentServlet extends HttpServlet {
 			Document student = result.first();
 
 			if (student != null) {
-				String attendancePercentage = student.get("attendance_percentage").toString();
-				pw.print("<h1>Student Attendance</h1>");
-				pw.print("<p>Attendance Percentage: " + attendancePercentage + "%</p>");
+				if (student != null) {
+				    String attendancePercentage = student.getString("attendance_percentage");
+				    if (attendancePercentage == null) {
+				        attendancePercentage = "Not calculated";
+				    }
+
+				    pw.print("<h1>Student Attendance</h1>");
+				    pw.print("<p>Attendance Percentage: " + attendancePercentage + "</p>");
+				}
+
 			} else {
 				pw.print("<h1>No attendance data found.</h1>");
 			}
